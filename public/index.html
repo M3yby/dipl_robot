@@ -1,0 +1,247 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>LIRKIS G-CVE VR platform</title>
+    <meta name="description" content="LIRKIS G-CVE edu project" />
+    <!--AFRAME release + extras with dynamic functionality----------------------------------------------------------------->
+    <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
+    <!--SUPERHANDS SCRIPT--------------------------------------------------------------------------------------------------->
+    <script src="https://unpkg.com/super-hands/dist/super-hands.min.js"></script>
+    <!-- AFRAME EXTRAS components------------------------------------------------------------------------------------------->
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <!-- NETWORKED AFRAME -------------------------------------------------------------------------------------------------->
+    <script src="https://unpkg.com/networked-aframe@^0.6.1/dist/networked-aframe.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://unpkg.com/aframe-slice9-component/dist/aframe-slice9-component.min.js"></script>
+    -
+    <!--PHYSICS SYSTEM------------------------------------------------------------------------------------------------------>
+    <script src="https://cdn.jsdelivr.net/gh/n5ro/aframe-physics-system@v4.0.1/dist/aframe-physics-system.min.js"></script>
+    <script src="https://unpkg.com/aframe-event-set-component@^4.1.1/dist/aframe-event-set-component.min.js"></script>
+    <script src="https://unpkg.com/aframe-physics-extras/dist/aframe-physics-extras.min.js"></script>
+    <!--COMMUNICATION MODULES----------------------------------------------------------------------------------------------->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.5/socket.io.min.js"></script>
+    <script src="easyrtc/easyrtc.js"></script>
+    <!--OTHER SCRIPTS------------------------------------------------------------------------------------------------------->
+    <script src="https://unpkg.com/aframe-randomizer-components@^3.0.1/dist/aframe-randomizer-components.min.js"></script>
+    <!--CAM KINEMATICS COMPONENT-------------------------------------------------------------------------------------------->
+    <script src="https://rawgit.com/urish/aframe-camera-events/master/index.js"></script>
+    <script src="https://rawgit.com/feiss/aframe-environment-component/master/dist/aframe-environment-component.min.js"></script>
+    <script src="/js/stats/stats.js"></script>
+    <script src="js/VRcontrols.js"></script>
+    <script src="js/entity_rotate.js"></script>
+    <script src="js/body_rot.js"></script>
+    <script src="js/manager.js"></script>
+    <script type="text/javascript" src="js/webxr.js"></script>
+    <script src="js/keyController.js"></script>
+    <script src="js/move_comp.js"></script>
+  </head>
+  <body onload="init();">
+    <a-scene
+    cam-switch
+      id="myScene"
+      physics="debug: false; gravity: -9.8"
+      networked-scene="
+      room: basic;
+      debug: false;                      
+    "
+    stats joystick shadow="type: basic; autoUpdate: false;" 
+    renderer="antialias: true; colorManagement: true; physicallyCorrectLights: true;"
+    >
+      <a-assets timeout="15000">
+        <img
+          id="groundTexture"
+          src="https://cdn.glitch.me/ce4ef7c0-013c-4eb6-935f-ac467acfb117%2Fground.png?v=1636896563433"
+          crossorigin="anonymous"
+        />
+        <img
+          id="skybox"
+          src="https://cdn.glitch.me/ce4ef7c0-013c-4eb6-935f-ac467acfb117%2Fskybox.jpg?v=1636896626121"
+          crossorigin="anonymous"
+        />
+
+        <a-asset-item id="face" src="3dmodel/head/head.gltf"></a-asset-item>
+
+        <a-asset-item id="robot" src="3dmodel/body/kpi3.gltf"></a-asset-item>
+
+        <template id="avatar-template">
+          <a-entity class="avatar">
+            <a-gltf-model
+              src="#face"
+              scale="0.57 0.57 0.57"
+              rotation="0 90 0"
+              position="-0.013 -0.056 0"
+            >
+            </a-gltf-model>
+            <a-sphere
+              class="head"
+              color="#A0A0B2"
+              scale="0 0 0"
+              position="0 -0.08 0"
+              opacity="0.8"
+            ></a-sphere>
+            <a-entity
+              class="rayhead"
+              id="raycaster"
+              cursor
+              raycaster="objects: .clickable; showLine: true; far: 500"
+              line="color: white; opacity: 1"
+              position="0 0 0"
+              visible="true"
+            ></a-entity>
+            <a-gltf-model
+              src="#robot"
+              scale="3 3 3"
+              opacity="1"
+              rotation="0 -90 0"
+              position="0 -0.941 0.253"
+            >
+            </a-gltf-model>
+          </a-entity>
+        </template>
+
+        <template id="avatar-body">
+          <a-entity class="bodyavatar">
+            dynamic-body
+            <a-gltf-model
+              src="#robot"
+              scale="3 3 3"
+              opacity="1"
+              rotation="0 0 0"
+              position="0 0.342 0"
+            >
+            </a-gltf-model>
+          </a-entity>
+        </template>
+      </a-assets>
+
+      <a-entity id="fullbody" movement-controls gaze-interaction>
+        <a-entity
+          id="rig"
+          networked="template:#avatar-body;attachTemplateToLocal:true;"
+          position="0 0 0"
+          rotation="0 0 0"
+          movement-controls
+          gaze-interaction
+          bone-controller
+        >
+          <a-entity
+            id="playerhead"
+            networked="template:#avatar-template;attachTemplateToLocal:false;"
+            camera
+            position="0 1.3 0"
+            rotation="0 0 0"
+            look-controls="pointerLockEnabled:true"
+          >
+            <!--END OF 3D CURSOR IMPLEMENTATION ------------------------------------------->
+            <!--             <a-sphere class="head" visible="true" random-color></a-sphere> -->
+            <a-entity
+              class="rayhead"
+              cursor
+              raycaster="objects: .clickable; showLine: true; far: 500"
+              line="color: white; opacity: 1"
+              position="0 0 0"
+              visible="false"
+            ></a-entity>
+            
+            <a-entity
+              cursor="fuse: false; fuseTimeout: 500"
+              geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+              material="color: black; shader: flat"
+              position="0 0 -1"
+            ><a-image geometry="primitive: circle; radius: 0.025"  material="side: double" src="images/x.png" id="button" data-clickable visible="true" position="-1.58 -0.48 0.02" rotation="0 0 0"  
+            ></a-image>
+            <a-image geometry="primitive: circle; radius: 0.025"  material="side: double" src="images/z.png" id="button1" data-clickable visible="true" position="-1.6 -0.40 0.02" rotation="0 0 0"  
+            ></a-image>
+            <a-image geometry="primitive: circle; radius: 0.025"  material="side: double" src="images/c.png" id="button2" data-clickable visible="true" position="-1.47 -0.43 0.02" rotation="0 0 0"  
+            ></a-image>
+            <a-image geometry="primitive: circle; radius: 0.025"  material="side: double" src="images/v.png" id="button3" data-clickable visible="true" position="-1.35 -0.48 0.02" rotation="0 0 0"  
+            ></a-image>
+            <a-image geometry="primitive: circle; radius: 0.025"  material="side: double" src="images/b.png" id="button4" data-clickable visible="true" position="-1.33 -0.40 0.02" rotation="0 0 0"  
+            ></a-image>
+            <a-image   material="side: double" src="images/robot.png" id="button5" data-clickable visible="true" position="-1.5 -0.6 0" rotation="0 0 0" height="0.4" width="0.3"  
+            ></a-image>
+            <img id="sky" src="images/sky.jpg">
+          </a-entity>
+            <!--           </a-entity> -->
+          </a-entity>
+        </a-entity>
+      </a-entity>
+
+      <script>
+        NAF.schemas.add({
+          template: "#avatar-template",
+          components: [
+            "position",
+            "rotation",
+            {
+              selector: ".head",
+              component: "material",
+              property: "color"
+            }
+          ]
+        });
+      </script>
+
+      <a-entity
+        id="robotCopy"
+        gltf-model="#robotCopy"
+        position="1 0.5 -2"
+        scale="3 3 3"
+        visible="true"
+      ></a-entity> 
+
+      
+        <a-camera id="rig2" active="false" look-controls="enabled: false" position="0 1.420 -2.188" wasd-controls="enabled: false" spectator="enabled:false"> 
+        <a-entity
+        id="robot"
+        movement-controls="enabled: false"
+        gltf-model="#robot"
+        position="0 -1 0.182"
+        scale="3 3 3"
+        manager="robotCopy: #robotCopy; raycaster: #raycaster"
+        visible="true"
+        rotation="0 -90 0";
+      >
+      <!-- <a-entity
+      id="raycaster"
+      raycaster="objects: .clickable; showLine: true; far: 500"
+      line="color: white; opacity: 1"
+      position="0 0 0"
+      visible="true"
+    ></a-entity> -->
+      </a-entity> 
+      </a-camera> 
+   
+      <!-- <a-plane
+        geometry="height: 650; width: 650"
+        material="src: #groundTexture; side: double; color: #c0c0c0; repeat: 20 20"
+        position="0 -0.3 -23.5"
+        rotation="-90 0 0"
+        static-body
+        id="ground"
+      >
+      </a-plane> -->
+
+      <!-- <a-entity
+        light="color: #fff; intensity: 0.5; type: ambient;"
+        visible="true"
+      ></a-entity>
+      <a-entity
+        light="color: #ffffff; type: point; decay: 0.94; distance: 10; intensity: 0.43"
+        visible=""
+        id="PointLight1"
+        position="0 40.78626 -1.13455"
+      ></a-entity> -->
+      <a-entity position="4.074998378753662 5.901977062225342 -0.9879937767982483" 
+      light="castShadow:false; color:#ffffff; distance:40.0; type:point; intensity:1.0; shadowBias: -0.001; shadowCameraFar: 501.02; shadowCameraBottom: 12; shadowCameraFov: 101.79; shadowCameraNear: 0; shadowCameraTop: -5; shadowCameraRight: 10; shadowCameraLeft: -10; shadowRadius: 2;"></a-entity>
+
+      <!-- SKYBOX       -->
+      <!-- <a-sky src="#skybox" rotation="0 90 0"></a-sky> -->
+      <a-sky src="#sky" material="" geometry="" rotation="0 90 0"></a-sky>
+    </a-scene>
+
+    
+
+    
+  </body>
+</html>
